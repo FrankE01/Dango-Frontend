@@ -1,5 +1,10 @@
 import React, { useState, useRef } from "react";
-import { Text, View, useWindowDimensions } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,15 +14,20 @@ import Animated, {
   useAnimatedStyle,
   runOnJS,
 } from "react-native-reanimated";
-import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import {
+  GestureDetector,
+  Gesture,
+  Directions,
+} from "react-native-gesture-handler";
 
 const Home = () => {
   const [parentBounds, setParentBounds] = useState({ width: 0, height: 0 });
   const offset = useSharedValue({ x: 0, y: 0 });
   const rotateZ = useSharedValue("0deg");
+  const scale = useSharedValue(1);
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const [images, setImages] = useState(["red", "green", "blue"]);
-  const [activeIndex, setActiveIndex] = useState(images.length - 1);
+  const [loading, setLoading] = useState(false);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -25,9 +35,104 @@ const Home = () => {
         { translateX: offset.value.x },
         { translateY: offset.value.y },
         { rotateZ: rotateZ.value },
+        { scale: scale.value },
       ],
     };
   });
+
+  const updateList = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const temp = images.slice();
+      const last = temp.pop();
+      if (last) temp.unshift(last);
+      setImages(temp);
+      setLoading(false);
+    }, 300);
+    // setLoading(false);
+  };
+
+  const handleHardReset = () => {
+    offset.value = {
+      x: 0,
+      y: 0,
+    };
+    rotateZ.value = rotateZ.value = "0deg";
+  };
+
+  const handleReject = () => {
+    offset.value = withSpring({
+      x: offset.value.x - screenWidth - 100,
+      y: offset.value.y,
+    });
+    rotateZ.value = withSpring(
+      rotateZ.value === "0deg" ? "-45deg" : "0deg",
+      {},
+      (finished) => {
+        if (finished) {
+          runOnJS(handleHardReset)();
+          runOnJS(updateList)();
+        }
+      }
+    );
+  };
+
+  const handleSkip = () => {
+    offset.value = withSpring(
+      {
+        x: offset.value.x,
+        y: offset.value.y - screenHeight - 100,
+      },
+      {},
+      (finished) => {
+        if (finished) {
+          runOnJS(handleHardReset)();
+          runOnJS(updateList)();
+        }
+      }
+    );
+  };
+
+  const handleUnskip = () => {
+    offset.value = withSpring(
+      {
+        x: offset.value.x,
+        y: offset.value.y + screenHeight + 100,
+      },
+      {},
+      (finished) => {
+        if (finished) {
+          runOnJS(handleHardReset)();
+          runOnJS(updateList)();
+        }
+      }
+    );
+  };
+
+  const handleApprove = () => {
+    offset.value = withSpring({
+      x: offset.value.x + screenWidth + 100,
+      y: offset.value.y,
+    });
+    rotateZ.value = withSpring(
+      rotateZ.value === "0deg" ? "45deg" : "0deg",
+      {},
+      (finished) => {
+        if (finished) {
+          runOnJS(handleHardReset)();
+          runOnJS(updateList)();
+        }
+      }
+    );
+  };
+
+  const handleReset = () => {
+    offset.value = withSpring({
+      x: 0,
+      y: 0,
+    });
+    rotateZ.value = withSpring((rotateZ.value = "0deg"));
+  };
 
   return (
     <SafeAreaView className="w-screen h-screen px-6 py-4 z-0">
@@ -44,180 +149,119 @@ const Home = () => {
             className="border-2 border-gray-300 rounded-lg border-dashed p-3"
           >
             <GestureDetector
-              gesture={Gesture.Pan().onUpdate((e) => {
-                offset.value = {
-                  x: e.translationX,
-                  y: e.translationY,
-                };
+              gesture={Gesture.Simultaneous(
+                Gesture.Pan()
+                  .onStart(() => {
+                    scale.value = withSpring(1.1);
+                  })
+                  .onUpdate((e) => {
+                    offset.value = {
+                      x: e.translationX,
+                      y: e.translationY,
+                    };
 
-                const halfWidth = parentBounds.width / 2;
-                const halfHeight = parentBounds.height / 2;
+                    const halfWidth = parentBounds.width / 2;
+                    const halfHeight = parentBounds.height / 2;
 
-                if (e.translationY < -halfHeight) {
-                  //skip
-                  offset.value = withSpring({
-                    x: offset.value.x,
-                    y: offset.value.y - screenHeight - 100,
-                  });
-                } else if (e.translationY > halfHeight) {
-                  //unskip
-                  offset.value = withSpring({
-                    x: offset.value.x,
-                    y: offset.value.y + screenHeight + 100,
-                  });
-                } else if (e.translationX < -halfWidth) {
-                  //reject
-                  offset.value = withSpring({
-                    x: offset.value.x - screenWidth - 100,
-                    y: offset.value.y,
-                  });
-                  rotateZ.value = withSpring(
-                    rotateZ.value === "0deg" ? "-45deg" : "0deg"
-                  );
-                } else if (e.translationX > halfWidth) {
-                  //accept
-                  offset.value = withSpring({
-                    x: offset.value.x + screenWidth + 100,
-                    y: offset.value.y,
-                  });
-                  rotateZ.value = withSpring(
-                    rotateZ.value === "0deg" ? "45deg" : "0deg"
-                  );
-                } else {
-                  offset.value = withSpring({
-                    x: 0,
-                    y: 0,
-                  });
-                  rotateZ.value = withSpring((rotateZ.value = "0deg"));
-                }
-              })}
+                    if (e.translationY < -halfHeight) {
+                      //skip
+                      runOnJS(handleSkip)();
+                    } else if (e.translationY > halfHeight) {
+                      //unskip
+                      runOnJS(handleUnskip)();
+                    } else if (e.translationX < -halfWidth) {
+                      //reject
+                      runOnJS(handleReject)();
+                    } else if (e.translationX > halfWidth) {
+                      //approve
+                      runOnJS(handleApprove)();
+                    } else {
+                      //reset
+                      runOnJS(handleReset)();
+                    }
+                  })
+                  .onEnd(() => {
+                    scale.value = withSpring(1);
+                  }),
+                Gesture.Fling()
+                  .direction(Directions.UP)
+                  .onEnd(() => {
+                    runOnJS(handleSkip)();
+                  }),
+                Gesture.Fling()
+                  .direction(Directions.DOWN)
+                  .onEnd(() => {
+                    runOnJS(handleUnskip)();
+                  }),
+                Gesture.Fling()
+                  .direction(Directions.LEFT)
+                  .onEnd(() => {
+                    runOnJS(handleReject)();
+                  }),
+                Gesture.Fling()
+                  .direction(Directions.RIGHT)
+                  .onEnd(() => {
+                    runOnJS(handleApprove)();
+                  })
+              )}
             >
               <View className="relative h-[350px] w-[270px]">
                 {images.map((image, index) => (
                   <Animated.View
                     key={index}
-                    className={`absolute h-[350px] w-[270px] z-${index}`}
-                    style={index === activeIndex ? animatedStyles : {}}
+                    className={`absolute h-[350px] w-[270px] ${
+                      loading ? "opacity-10" : "opacity-100"
+                    }`}
+                    style={index === images.length - 1 ? animatedStyles : {}}
                   >
                     <View
                       className={`bg-${image}-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out`}
                     >
-                      <Text>Image</Text>
+                      <Text>{image}</Text>
+                      <View className="absolute flex items-center justify-center w-full h-full">
+                        {loading && (
+                          <ActivityIndicator size="large" color="white" />
+                        )}
+                      </View>
                     </View>
                   </Animated.View>
                 ))}
-                {/* <Animated.View
-                  className="absolute h-[350px] w-[270px]"
-                  style={animatedStyles}
-                >
-                  <View className="bg-red-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out">
-                    <Text>Image</Text>
-                  </View>
-                </Animated.View>
-                <Animated.View
-                  className="absolute h-[350px] w-[270px]"
-                  style={animatedStyles}
-                >
-                  <View className="bg-green-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out">
-                    <Text>Image</Text>
-                  </View>
-                </Animated.View>
-                <Animated.View
-                  className="absolute h-[350px] w-[270px]"
-                  style={animatedStyles}
-                >
-                  <View className="bg-blue-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out">
-                    <Text>Image</Text>
-                  </View>
-                </Animated.View> */}
               </View>
             </GestureDetector>
           </View>
           <View className="flex flex-row justify-between w-[350px] px-10 my-5">
             <Button
-              className="rounded-full"
-              onPress={() => {
-                offset.value = withSpring({
-                  x: offset.value.x - screenWidth - 100,
-                  y: offset.value.y,
-                });
-                rotateZ.value = withSpring(
-                  rotateZ.value === "0deg" ? "-45deg" : "0deg",
-                  {},
-                  (finished) => {
-                    if (finished) {
-                      runOnJS(setImages)(["red", "green", "blue"]);
-                    }
-                  }
-                );
-                setTimeout(() => {
-                  setActiveIndex((prev) => {
-                    if (prev < images.length - 1) {
-                      return prev + 1;
-                    }
-                    return 0;
-                  });
-                  offset.value = {
-                    x: 0,
-                    y: 0,
-                  };
-                  rotateZ.value = rotateZ.value = "0deg";
-                }, 500);
-              }}
+              className="rounded-full bg-secondary z-10"
+              onPress={handleReject}
             >
               <Ionicons name="close" size={22} color="red" />
             </Button>
-            <Button
-              className="rounded-full"
-              onPress={() => {
-                offset.value = withSpring({
-                  x: offset.value.x,
-                  y: offset.value.y - screenHeight - 100,
-                });
-              }}
-            >
+            <Button className="rounded-full bg-secondary" onPress={handleSkip}>
               <Ionicons name="play-forward" size={22} color="blue" />
             </Button>
             <Button
-              className="rounded-full"
+              className="rounded-full bg-secondary"
               onPress={() => {
-                offset.value = withSpring({
-                  x: 0,
-                  y: 0,
-                });
-                rotateZ.value = withSpring((rotateZ.value = "0deg"));
+                handleReset();
                 setImages(["red", "green", "blue"]);
               }}
             >
               <Ionicons name="refresh" size={22} color="blue" />
             </Button>
             <Button
-              className="rounded-full"
-              onPress={() => {
-                offset.value = withSpring({
-                  x: offset.value.x + screenWidth + 100,
-                  y: offset.value.y,
-                });
-                rotateZ.value = withSpring(
-                  rotateZ.value === "0deg" ? "45deg" : "0deg"
-                );
-              }}
+              className="rounded-full bg-secondary"
+              onPress={handleApprove}
             >
               <Ionicons name="checkmark" size={22} color="green" />
             </Button>
           </View>
-          <View className="flex items-center justify-center w-[350px]">
-            {/* <Alert icon={Terminal} className="max-w-xl">
-            <AlertTitle>Heads up!</AlertTitle>
-            <AlertDescription>
-              You can use a terminal to run commands on your computer.
-            </AlertDescription>
-          </Alert> */}
-          </View>
+          <View className="flex items-center justify-center w-[350px]"></View>
         </View>
         <View className="">
           <Text className="text-left text-gray-500">Label</Text>
-          <Text className="text-left text-foreground text-xl">Item Label</Text>
+          <Text className="text-left text-foreground text-xl">
+            {images[images.length - 1]}
+          </Text>
         </View>
       </View>
     </SafeAreaView>
