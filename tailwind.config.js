@@ -8,6 +8,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        mainBrown: "#975005",
+        mainBlue: "#114EFD",
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

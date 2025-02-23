@@ -1,8 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Home, CircleUser, PlusSquare } from "lucide-react-native";
-import Icon from "@react-native-vector-icons/ionicons";
-
+import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
 
 const TabLayout = () => {
@@ -12,9 +10,19 @@ const TabLayout = () => {
         name="(home)/index"
         options={{
           title: "Home",
+          tabBarLabel: ({ focused }) => {
+            return focused ? (
+              <Text className="text-sm text-mainBlue">Home</Text>
+            ) : null;
+          },
           tabBarIcon: ({ focused }) => {
-            return <Icon name="home" size={24} color="#4F8EF7" />;
-            // return <Text>Home</Text>;
+            return (
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={focused ? 24 : 30}
+                color={focused ? "#114EFD" : "gray"}
+              />
+            );
           },
         }}
       />
@@ -22,8 +30,19 @@ const TabLayout = () => {
         name="(new)/index"
         options={{
           title: "New",
+          tabBarLabel: ({ focused }) => {
+            return focused ? (
+              <Text className="text-sm text-mainBlue">New</Text>
+            ) : null;
+          },
           tabBarIcon: ({ focused }) => {
-            return <PlusSquare stroke={focused ? "black" : "gray"} />;
+            return (
+              <Ionicons
+                name={focused ? "add-circle" : "add-circle-outline"}
+                size={focused ? 24 : 30}
+                color={focused ? "#114EFD" : "gray"}
+              />
+            );
           },
         }}
       />
@@ -31,8 +50,19 @@ const TabLayout = () => {
         name="(profile)/index"
         options={{
           title: "Profile",
+          tabBarLabel: ({ focused }) => {
+            return focused ? (
+              <Text className="text-sm text-mainBlue">Profile</Text>
+            ) : null;
+          },
           tabBarIcon: ({ focused }) => {
-            return <CircleUser stroke={focused ? "black" : "gray"} />;
+            return (
+              <Ionicons
+                name={focused ? "person-circle" : "person-circle-outline"}
+                size={focused ? 24 : 30}
+                color={focused ? "#114EFD" : "gray"}
+              />
+            );
           },
         }}
       />
