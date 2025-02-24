@@ -22,7 +22,11 @@ const Home = () => {
   const rotateZ = useSharedValue("0deg");
   const scale = useSharedValue(1);
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const [images, setImages] = useState(["red", "green", "blue"]);
+  const [images, setImages] = useState([
+    { name: "red", color: "bg-red-500" },
+    { name: "green", color: "bg-green-500" },
+    { name: "blue", color: "bg-blue-500" },
+  ]);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -203,9 +207,9 @@ const Home = () => {
                     style={index === images.length - 1 ? animatedStyles : {}}
                   >
                     <View
-                      className={`bg-${image}-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out`}
+                      className={`${image?.color} h-[350px] w-[270px] transition-transform duration-700 ease-in-out`}
                     >
-                      <Text>{image}</Text>
+                      <Text>{image?.name}</Text>
                       <View className="absolute flex items-center justify-center w-full h-full"></View>
                     </View>
                   </Animated.View>
@@ -227,7 +231,11 @@ const Home = () => {
               className="rounded-full bg-secondary"
               onPress={() => {
                 handleReset();
-                setImages(["red", "green", "blue"]);
+                setImages([
+                  { name: "red", color: "bg-red-500" },
+                  { name: "green", color: "bg-green-500" },
+                  { name: "blue", color: "bg-blue-500" },
+                ]);
               }}
             >
               <Ionicons name="refresh" size={22} color="blue" />
@@ -244,7 +252,7 @@ const Home = () => {
         <View className="">
           <Text className="text-left text-gray-500">Label</Text>
           <Text className="text-left text-foreground text-xl">
-            {images[images.length - 1]}
+            {images[images.length - 1].name}
           </Text>
         </View>
       </View>
