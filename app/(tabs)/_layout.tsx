@@ -1,7 +1,7 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Text } from "react-native";
+import { Text } from "~/components/ui/text";
 
 const TabLayout = () => {
   return (

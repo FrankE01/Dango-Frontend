@@ -1,12 +1,8 @@
-import React, { useState, useRef } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import React, { useState } from "react";
+import { View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
@@ -27,7 +23,6 @@ const Home = () => {
   const scale = useSharedValue(1);
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const [images, setImages] = useState(["red", "green", "blue"]);
-  const [loading, setLoading] = useState(false);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -41,15 +36,10 @@ const Home = () => {
   });
 
   const updateList = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const temp = images.slice();
-      const last = temp.pop();
-      if (last) temp.unshift(last);
-      setImages(temp);
-      setLoading(false);
-    }, 300);
-    // setLoading(false);
+    const temp = images.slice();
+    const last = temp.pop();
+    if (last) temp.unshift(last);
+    setImages(temp);
   };
 
   const handleHardReset = () => {
@@ -135,7 +125,7 @@ const Home = () => {
   };
 
   return (
-    <SafeAreaView className="w-screen h-screen px-6 py-4 z-0">
+    <SafeAreaView className="w-screen h-screen px-6 py-4">
       <View className="flex">
         <Text className="text-3xl text-foreground">Review Annotations</Text>
       </View>
@@ -209,20 +199,14 @@ const Home = () => {
                 {images.map((image, index) => (
                   <Animated.View
                     key={index}
-                    className={`absolute h-[350px] w-[270px] ${
-                      loading ? "opacity-10" : "opacity-100"
-                    }`}
+                    className={`absolute h-[350px] w-[270px]`}
                     style={index === images.length - 1 ? animatedStyles : {}}
                   >
                     <View
                       className={`bg-${image}-500 h-[350px] w-[270px] transition-transform duration-700 ease-in-out`}
                     >
                       <Text>{image}</Text>
-                      <View className="absolute flex items-center justify-center w-full h-full">
-                        {loading && (
-                          <ActivityIndicator size="large" color="white" />
-                        )}
-                      </View>
+                      <View className="absolute flex items-center justify-center w-full h-full"></View>
                     </View>
                   </Animated.View>
                 ))}

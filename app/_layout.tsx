@@ -62,6 +62,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
           </Stack>
+          <PortalHost />
         </SafeAreaProvider>
         <PortalHost />
       </ThemeProvider>
